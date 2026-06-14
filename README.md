@@ -3,6 +3,8 @@
 > 一个为 **Windows 11 + NVIDIA RTX 5060 Laptop** 量身定制的 YOLOv8 检测项目.
 > conda 独立环境 + 清华源 + PyTorch cu128 + Blackwell sm_120 全程满血跑.
 
+📌 **只想用训练好的模型?直接看 [📖 使用说明书 USAGE.md](USAGE.md)**(包含图片/视频/摄像头/批量/Web 集成全部场景)
+
 ![status](https://img.shields.io/badge/status-ready-brightgreen)
 ![python](https://img.shields.io/badge/python-3.11-blue)
 ![pytorch](https://img.shields.io/badge/torch-2.11.0%2Bcu128-orange)
