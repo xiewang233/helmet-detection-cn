@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# 训练产物
+runs/
+weights/
+*.log
+
+# 数据集(太大,不入库)
+datasets/SHWD/
+datasets/SHWD_demo/
+datasets/HardHat/
+datasets/helmet_yolo/
+
+# 模型权重(根目录的预训练权重 + 训练产物)
+*.pt
+*.onnx
+*.engine
+*.tar.gz
+*.zip
+models/*.pt
+
+# 输出
+data/output/*
+!data/output/.gitkeep
+
+# 临时
+*.tmp
+.DS_Store
+Thumbs.db

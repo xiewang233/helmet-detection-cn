@@ -1,0 +1,19 @@
+name: yolov8
+channels:
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/msys2
+dependencies:
+  - python=3.11
+  - pip>=24.0
+  - pip:
+      - --extra-index-url https://download.pytorch.org/whl/cu128
+      - --index-url https://pypi.tuna.tsinghua.edu.cn/simple
+      - ultralytics>=8.3.0
+      - opencv-python>=4.10.0
+      - pyyaml>=6.0
+      - tqdm>=4.66.0
+      - pandas>=2.0.0
+      - matplotlib>=3.7.0
+      - seaborn>=0.13.0
+      - requests>=2.31.0

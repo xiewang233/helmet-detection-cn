@@ -1,0 +1,45 @@
+# 训练超参数 - 针对 RTX 5060 8GB 优化
+# 用法: python src/train.py --config configs/train_params.yaml
+
+# 模型(从 ultralytics 官方预训练权重起步做迁移学习)
+# yolov8n.pt: 3.2M 参数, 适合快速试验
+# yolov8s.pt: 11.2M 参数, 精度/速度平衡(推荐)
+# yolov8m.pt: 25.9M 参数, 8GB 显存勉强能跑 batch=8
+model: yolov8s.pt
+
+# 数据集
+data: configs/helmet.yaml
+
+# 训练轮数(快速验证用 20, 出效果用 100, 拉满用 300)
+epochs: 100
+
+# 批大小(RTX 5060 8GB 跑 yolov8s 用 16, yolov8n 可到 32, yolov8m 降到 8)
+batch: 16
+
+# 输入分辨率(640 是 YOLOv8 默认, 降到 416 显存占用减半)
+imgsz: 640
+
+# 优化器: SGD / AdamW / auto(自动选)
+optimizer: auto
+
+# 学习率(初始), 迁移学习建议 0.001-0.01
+lr0: 0.01
+
+# 设备: 0 = 第一块 GPU, cpu = CPU(本项目禁用)
+device: 0
+
+# 工作进程数(AMD Ryzen 7 H 260 是 16 线程, 用 8 比较稳)
+workers: 8
+
+# 项目/实验名(权重和日志会输出到 runs/detect/<name>/)
+project: runs/detect
+name: helmet_exp
+
+# 混合精度训练(RTX 5060 支持 FP16, 显存占用减半, 速度提升 1.5-2x)
+amp: true
+
+# 训练完后是否验证
+val: true
+
+# 训练完导出 ONNX
+export_onnx: false

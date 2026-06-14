@@ -1,0 +1,6 @@
+# PyTorch 三件套,必须从 PyTorch 官方源装 cu128 轮子(RTX 5060 Blackwell sm_120 必须)
+# 安装命令:
+#   pip install -r requirements-torch.txt --index-url https://download.pytorch.org/whl/cu128
+torch>=2.7.0
+torchvision>=0.22.0
+torchaudio>=2.7.0
