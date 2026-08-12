@@ -4,6 +4,13 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+# Windows 控制台默认 GBK, 中文输出会乱码; 统一切 UTF-8
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 # 项目根
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"

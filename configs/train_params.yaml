@@ -28,12 +28,13 @@ lr0: 0.01
 # 设备: 0 = 第一块 GPU, cpu = CPU(本项目禁用)
 device: 0
 
-# 工作进程数(AMD Ryzen 7 H 260 是 16 线程, 用 8 比较稳)
-workers: 8
+# 工作进程数(Windows 上 8 太激进: epoch 末尾关闭 Mosaic 会重启 dataloader,
+# 8 worker 同时 spawn 易触发 MemoryError. 实测 4 稳定, 见 README FAQ)
+workers: 4
 
-# 项目/实验名(权重和日志会输出到 runs/detect/<name>/)
-project: runs/detect
-name: helmet_exp
+# 实验名(权重和日志输出到 runs/detect/<name>/)
+# project 留空(删除即可)用 ultralytics 默认 runs/detect, 避免路径双重嵌套
+name: hardhat_100ep
 
 # 混合精度训练(RTX 5060 支持 FP16, 显存占用减半, 速度提升 1.5-2x)
 amp: true

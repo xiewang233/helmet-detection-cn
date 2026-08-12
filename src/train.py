@@ -69,17 +69,17 @@ def main() -> int:
         data_path = str(ROOT / data_path)
 
     model_path = cfg.pop("model")
-    project = cfg.pop("project", "runs/detect")
+    project = cfg.pop("project", None)  # None -> 用 ultralytics 默认 runs/detect
     name = cfg.pop("name", "helmet_exp")
     export_onnx = cfg.pop("export_onnx", False)
 
     model = YOLO(model_path)
-    results = model.train(
-        data=data_path,
-        project=project,
-        name=name,
-        **cfg,
-    )
+    # 只在显式指定 project 时才传, 否则让 ultralytics 用 settings 的 runs_dir,
+    # 避免 save_dir 变成 runs/detect/runs/detect/<name> 双重嵌套
+    train_kwargs = dict(data=data_path, name=name, **cfg)
+    if project:
+        train_kwargs["project"] = project
+    results = model.train(**train_kwargs)
 
     print()
     print(f"[OK] 训练完成")

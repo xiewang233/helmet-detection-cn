@@ -1,7 +1,7 @@
 # YOLOv8 安全帽检测 · RTX 5060 Blackwell 实战
 
 > 在 NVIDIA RTX 5060 Laptop(Blackwell sm_120)上从零搭建的 YOLOv8 安全帽检测项目.
-> **helmet mAP50 = 0.946,head mAP50 = 0.934**(100 epoch 完整训练),达到生产可用水平.
+> **helmet mAP50 = 0.962,head mAP50 = 0.956**(100 epoch 完整训练, RTX 5060 实测),达到生产可用水平.
 
 📌 **只想用模型?看 [USAGE.md](USAGE.md)** · 想懂原理?看 [ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
@@ -83,9 +83,9 @@ YOLOv8 在 100 epoch 末尾关闭 Mosaic 增强时会重启 dataloader,Windows �
 
 | 类别 | Precision | Recall | **mAP50** | mAP50-95 |
 |---|---|---|---|---|
-| **helmet**(戴帽) | 0.958 | 0.862 | **0.946** | 0.604 |
-| **head**(没戴) | 0.931 | 0.883 | **0.934** | 0.603 |
-| 综合(含 person) | 0.963 | 0.582 | 0.641 | 0.409 |
+| **helmet**(戴帽) | 0.925 | 0.930 | **0.962** | 0.626 |
+| **head**(没戴) | 0.876 | 0.936 | **0.956** | 0.631 |
+| 综合(含 person) | 0.628 | 0.629 | 0.649 | 0.424 |
 
 混淆矩阵:
 
@@ -97,21 +97,25 @@ PR 曲线:
 
 ### 真实工地推理(测试集)
 
-下面 4 张是用 `models/hardhat_best.pt` 在测试集随机抽图推理的结果. **绿框 = helmet, 红框 = head**:
+下面 5 张是用本次训练的 `best.pt`(helmet mAP50=0.962 / head 0.956)在测试集抽图推理的结果.
+**绿框 = helmet(戴帽), 红框 = head(未戴)**:
 
 ![pic1](screenshots/18_inference_pic1.png)
-*22 个目标:全部 head —— 大批未戴安全帽!*
+*19 个 head —— 大批未戴安全帽(告警场景)*
 
 ![pic2](screenshots/19_inference_pic2.png)
-*15 个目标:全部 helmet —— 全员规范佩戴*
+*21 个 head —— 未戴场景*
+
+![pic3](screenshots/20_inference_pic3.png)
+*23 head + 2 helmet —— 混合, 未戴为主*
 
 ![pic4](screenshots/21_inference_pic4.png)
-*10 个目标:全部 head —— 未戴场景*
+*60 个 helmet —— 全员规范佩戴*
 
 ![pic5](screenshots/22_inference_pic5.png)
-*10 个目标:7 helmet + 3 head —— 混合场景*
+*41 个 helmet —— 规范佩戴*
 
-更多推理结果见 `screenshots/` 目录(18-23 号图).
+更多推理结果见 `screenshots/` 目录(18-22 号图).
 
 ### RTX 5060 性能压测
 
@@ -119,10 +123,16 @@ PR 曲线:
 
 ![benchmark](screenshots/09_benchmark.png)
 
-| 模型 | 延迟 | FPS | 显存 |
-|---|---|---|---|
-| yolov8n (FP32) | 7.65 ms | **130.7** | 37 MB |
-| yolov8n (FP16) | 7.85 ms | 127.4 | **28 MB** |
+| 模型 | 精度 | 延迟 | FPS | 显存 |
+|---|---|---|---|---|
+| yolov8n | FP32 | 7.59 ms | **131.7** | 37 MB |
+| yolov8n | FP16 | 7.68 ms | 130.2 | **28 MB** |
+| yolov8s | FP32 | 7.75 ms | 129.0 | 97 MB |
+| yolov8s | FP16 | **7.35 ms** | **136.1** | **54 MB** |
+
+> FP32 vs FP16: yolov8n 二者速度持平(小模型非瓶颈), FP16 显存省 24%;
+> yolov8s 用 FP16 既快 5% 又省显存 44%, **部署推荐 yolov8s + FP16**.
+> 柱状图见 `screenshots/09_benchmark.png`(FP32) / `screenshots/24_benchmark_fp16.png`(FP16).
 
 ---
 
@@ -171,18 +181,22 @@ YOLOv8-Helmet-Detection/
 ├── USAGE.md                   ← 使用说明书(详细操作手册)
 ├── LICENSE                    ← MIT
 ├── docs/ARCHITECTURE.md       ← YOLOv8 网络结构详解
-├── screenshots/               ← 24 张实测截图
+├── screenshots/               ← 本次复现实测截图(训练曲线/混淆矩阵/PR/推理/压测)
 ├── configs/
 │   ├── helmet.yaml            ← 数据集类名/路径
 │   └── train_params.yaml      ← 训练超参
+├── Makefile                   ← 常用命令入口 (check/prepare/train/benchmark/export)
 ├── src/
 │   ├── check_gpu.py           ← GPU/CUDA 自检
+│   ├── download_data.py       ← 下载 SHWD 数据集
+│   ├── prepare_data.py        ← SHWD VOC→YOLO 转换
 │   ├── prepare_hardhat.py     ← Kaggle HardHat VOC→YOLO 转换
+│   ├── dataset_utils.py       ← 数据准备公共工具(VOC→YOLO/划分/链接, 去重)
 │   ├── train.py               ← 训练入口
 │   ├── detect_image.py        ← 图片推理
 │   ├── detect_video.py        ← 视频推理
 │   ├── detect_camera.py       ← 摄像头实时
-│   ├── benchmark.py           ← 性能压测
+│   ├── benchmark.py           ← 性能压测 (CSV+柱状图落盘)
 │   ├── export_model.py        ← ONNX/TensorRT 导出
 │   ├── render_terminal.py     ← 终端输出渲染成 PNG
 │   └── utils.py
@@ -245,19 +259,22 @@ python -c "import zipfile; zipfile.ZipFile('D:/archive.zip').extractall('dataset
 # 3. VOC → YOLO
 python src/prepare_hardhat.py
 
-# 4. 训练(RTX 5060 约 25 分钟 90 epoch)
-python src/train.py --model yolov8n.pt --epochs 100 --batch 32 --imgsz 416 --workers 4
+# 4. 训练(默认读 configs/train_params.yaml: yolov8s / 100ep / batch16 / imgsz640 / workers4)
+python src/train.py
+# 等价显式写法:
+#   python src/train.py --model yolov8s.pt --epochs 100 --batch 16 --imgsz 640 --workers 4
+# 或快速试验: python src/train.py --epochs 20 --batch 8
 ```
 
 ### 关键训练参数(RTX 5060 8GB)
 
 | 参数 | 推荐值 | 说明 |
 |---|---|---|
-| `model` | yolov8n.pt | 8GB 显存够用; yolov8m 也能跑 batch=8 |
-| `batch` | 32 | 8GB 极限; 16 更稳 |
-| `imgsz` | 416 | HardHat 原图就是 416,直接用 |
+| `model` | yolov8s.pt | 精度/速度平衡(11.2M 参数); 求快用 yolov8n.pt |
+| `batch` | 16 | yolov8s@640 稳跑; 显存紧降到 8 |
+| `imgsz` | 640 | YOLOv8 默认; HardHat 原图 416 也可 |
 | `half` (AMP) | True | 必须,显存减半速度 2x |
-| `workers` | 4 | Windows 上 8 容易 OOM |
+| `workers` | 4 | Windows 上 8 在 epoch 末尾关 Mosaic 时易 OOM |
 
 ### 实时监控训练
 
@@ -303,6 +320,28 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 ### 训练在 epoch 90+ MemoryError
 
 → `workers=4`(默认 8 在 Windows 上太激进). 已写入 `train_params.yaml`.
+
+### 预训练权重 `yolov8s.pt` 下载失败 (SSL CERTIFICATE_VERIFY_FAILED)
+
+国内访问 GitHub releases 会报证书吊销检查失败 (`CRYPT_E_NO_REVOCATION_CHECK`),
+导致 `YOLO('yolov8s.pt')` 第一次自动下载就挂. 解法: 用镜像手动下到项目根目录,
+ultralytics 会优先用本地文件不再联网:
+
+```bash
+curl -L -o yolov8s.pt https://ghfast.top/https://github.com/ultralytics/assets/releases/download/v8.4.0/yolov8s.pt
+# 备用镜像: 把 https://ghfast.top 换成 https://gh-proxy.com / https://mirror.ghproxy.com
+```
+
+### `conda create` 卡在 repodata / HTTP 000 连接失败
+
+Anaconda 商业许可政策后, 国内 defaults 镜像(清华/北外/中科大)大多已撤下或 302
+重定向到失效地址. 别死磕 conda 源, 两条出路:
+
+1. **直接用 pip 建环境**(本项目推荐): 用任意 Python 3.11 跑
+   `pip install torch --index-url https://download.pytorch.org/whl/cu128` 即可,
+   完全绕开 conda defaults.
+2. **复用已有 torch 环境**: 只要 `torch.cuda.is_available()` 为 True 且
+   `torch.version.cuda == '12.8'`(支持 sm_120) 就能直接用, 不必新建 yolov8 环境.
 
 更多问题见 **[USAGE.md §9](USAGE.md#9-常见问题排查)**.
 

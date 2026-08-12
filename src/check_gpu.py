@@ -7,6 +7,13 @@ from __future__ import annotations
 
 import sys
 
+# Windows 控制台默认 GBK, 中文乱码; 统一切 UTF-8
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 
 def main() -> int:
     print("=" * 60)
@@ -50,12 +57,11 @@ def main() -> int:
     else:
         print("[!] 当前 GPU 不是 Blackwell,但 PyTorch 仍可工作")
 
-    # 实测一次矩阵乘法验证
+    # 实测一次矩阵乘法验证(显式 device, 不污染全局默认设备)
     print()
     print("实测 GPU 矩阵乘法 (4096x4096, FP16) ...")
-    torch.set_default_device("cuda")
-    a = torch.randn(4096, 4096, dtype=torch.float16)
-    b = torch.randn(4096, 4096, dtype=torch.float16)
+    a = torch.randn(4096, 4096, dtype=torch.float16, device="cuda")
+    b = torch.randn(4096, 4096, dtype=torch.float16, device="cuda")
     import time
     t0 = time.perf_counter()
     for _ in range(10):

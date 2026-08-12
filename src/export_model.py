@@ -43,15 +43,25 @@ def main() -> int:
     print()
 
     model = YOLO(args.weights)
-    out = model.export(
-        format=args.format,
-        half=args.half,
-        imgsz=args.imgsz,
-        batch=args.batch,
-        dynamic=args.dynamic,
-        simplify=args.simplify,
-        device=0,
-    )
+    try:
+        out = model.export(
+            format=args.format,
+            half=args.half,
+            imgsz=args.imgsz,
+            batch=args.batch,
+            dynamic=args.dynamic,
+            simplify=args.simplify,
+            device=0,
+        )
+    except Exception as e:
+        print(f"[X] 导出失败: {e}")
+        if args.format == "engine":
+            print("    TensorRT 导出需要 tensorrt 包, 且要和 CUDA 版本匹配:")
+            print("    pip install tensorrt   (或从 NVIDIA 官网下对应版本)")
+        elif args.format == "onnx":
+            print("    ONNX 导出需要 onnx 包: pip install onnx")
+            print("    --simplify 还需要 onnxsim: pip install onnxsim")
+        return 1
 
     print()
     print(f"[OK] 导出完成: {out}")
